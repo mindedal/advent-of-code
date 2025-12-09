@@ -1,20 +1,21 @@
 [project]
-name = "advent-of-code-2025"
+name = "advent-of-code"
 version = "1.0.0"
-description = "Advent of Code 2025 solutions with Python and uv"
+description = "Multi-year Advent of Code solutions with Python and uv"
 readme = "README.md"
 authors = [{ name = "Malte Mindedal" }]
 requires-python = ">=3.11"
-dependencies = [
-    "ruff>=0.14.8",
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["days", "libs"]
+dependencies = []
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["utils"]
+
+[tool.uv]
+package = true
 
 [dependency-groups]
 dev = [
@@ -25,12 +26,12 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["tests", "days"]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["days", "libs", "tests"]
+src = ["2025", "utils", "tests"]
 extend-select = ["I"]
 
 [tool.black]

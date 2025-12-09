@@ -1,4 +1,4 @@
-"""Common helpers used across Advent of Code solutions."""
+"""Shared utilities for Advent of Code solutions across years."""
 
 from .io import get_input_path, read_input, read_input_lines
 

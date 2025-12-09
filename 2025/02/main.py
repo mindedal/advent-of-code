@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-from libs.common import read_input_lines
+from utils.io import read_input_lines
+
+YEAR = 2025
+DAY = 2
 
 
 @dataclass(frozen=True)
@@ -125,7 +128,7 @@ def part2(ranges: list[IdRange]) -> int:
 def run(variant: str | None = None) -> None:
     """Run day02 solution and print results."""
 
-    lines = read_input_lines(2, variant)
+    lines = read_input_lines(YEAR, DAY, variant)
     ranges = parse_input(lines)
     print(f"Part 1: {part1(ranges)}")
     print(f"Part 2: {part2(ranges)}")

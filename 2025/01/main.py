@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from libs.common import read_input_lines
+from utils.io import read_input_lines
+
+YEAR = 2025
+DAY = 1
 
 
 @dataclass(frozen=True)
@@ -88,7 +91,7 @@ def part2(rotations: list[Rotation], start: int = 50) -> int:
 def run(variant: str | None = None) -> None:
     """Run day01 solution and print results."""
 
-    lines = read_input_lines(1, variant)
+    lines = read_input_lines(YEAR, DAY, variant)
     rotations = parse_input(lines)
     print(f"Part 1: {part1(rotations)}")
     print(f"Part 2: {part2(rotations)}")
