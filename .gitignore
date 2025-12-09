@@ -24,3 +24,6 @@ htmlcov/
 # Inputs (keep sample files checked in)
 inputs/*.txt
 !inputs/*.sample.txt
+
+# Linters and formatters
+.ruff_cache/
