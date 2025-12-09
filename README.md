@@ -2,17 +2,19 @@
 
 Monorepo setup for solving Advent of Code 2025 puzzles with Python and [uv](https://docs.astral.sh/uv/).
 
+Advent of Code: https://adventofcode.com/2025
+
 ## Layout
 
-- `days/` — one package per day (start with `day01`).
-- `inputs/` — raw puzzle inputs (ignored from git by default; add your own files).
-- `libs/common/` — shared helpers (parsing, I/O, etc.).
-- `.vscode/tasks.json` — quick tasks to run a day or the test suite.
+-   `days/` — one package per day (start with `day01`).
+-   `inputs/` — raw puzzle inputs (ignored from git by default; add your own files).
+-   `libs/common/` — shared helpers (parsing, I/O, etc.).
+-   `.vscode/tasks.json` — quick tasks to run a day or the test suite.
 
 ## Requirements
 
-- Python 3.11+ (works great with 3.12).
-- uv installed: `pipx install uv` or see the docs linked above.
+-   Python 3.11+ (works great with 3.12).
+-   uv installed: `pipx install uv` or see the docs linked above.
 
 ## Getting started
 

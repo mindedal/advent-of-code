@@ -6,6 +6,9 @@ requires-python = ">=3.11"
 name = "advent-of-code-2025"
 version = "1.0.0"
 source = { editable = "." }
+dependencies = [
+    { name = "ruff" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -15,6 +18,7 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "ruff", specifier = ">=0.14.8" }]
 
 [package.metadata.requires-dev]
 dev = [
