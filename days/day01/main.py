@@ -48,9 +48,41 @@ def part1(rotations: list[Rotation], start: int = 50) -> int:
 
 
 def part2(rotations: list[Rotation], start: int = 50) -> int:
-    """Placeholder until Part Two unlocks; return Part One result for now."""
+    """Count how many clicks land on 0 during all rotations.
 
-    return part1(rotations, start)
+    Every click is considered, not just the position after the rotation
+    finishes. The dial has values 0-99.
+    """
+
+    def zero_hits(position: int, rotation: Rotation) -> int:
+        """Return how many clicks during this rotation land on 0.
+
+        The first time the dial reaches 0 happens after ``first`` clicks;
+        subsequent hits occur every 100 clicks because the dial size is 100.
+        """
+
+        if rotation.steps == 0:
+            return 0
+
+        if rotation.direction == "L":
+            first = position % 100
+        else:  # "R"
+            first = (-position) % 100  # equivalently (100 - position) % 100
+
+        if first == 0:
+            first = 100  # must complete a full circle to hit 0
+
+        if rotation.steps < first:
+            return 0
+
+        return 1 + (rotation.steps - first) // 100
+
+    position = start
+    zeros = 0
+    for rotation in rotations:
+        zeros += zero_hits(position, rotation)
+        position = apply_rotation(position, rotation)
+    return zeros
 
 
 def run(variant: str | None = None) -> None:
