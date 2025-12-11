@@ -4,7 +4,7 @@ from pathlib import Path
 
 from utils.io import read_input_lines
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DAY04_PATH = PROJECT_ROOT / "2025" / "04" / "main.py"
 
 
