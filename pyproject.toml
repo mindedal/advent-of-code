@@ -5,7 +5,9 @@ description = "Multi-year Advent of Code solutions with Python and uv"
 readme = "README.md"
 authors = [{ name = "Malte Mindedal" }]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "z3-solver>=4.12.4",
+]
 
 [build-system]
 requires = ["hatchling"]
