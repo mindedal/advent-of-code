@@ -1,33 +1,37 @@
-import sys
-from importlib import util
-from pathlib import Path
+from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Protocol, cast
+
+from tests._helpers import PROJECT_ROOT, load_module
 from utils.io import read_input_lines
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DAY12_PATH = PROJECT_ROOT / "2025" / "12" / "main.py"
 
 
-def load_day12_module():
-    spec = util.spec_from_file_location("aoc2025_day12", DAY12_PATH)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {DAY12_PATH}")
-    module = util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+class ParsedInputLike(Protocol):
+    shapes: object
+    regions: Sequence[object]
 
 
-day12 = load_day12_module()
+class Day12Module(Protocol):
+    def parse_input(self, lines: list[str]) -> ParsedInputLike: ...
+
+    def part1(self, parsed: ParsedInputLike) -> int: ...
+
+    def can_fit_region(self, shapes: object, region: object) -> bool: ...
 
 
-def test_sample_part1_count_fit_regions():
+day12 = cast(Day12Module, load_module("aoc2025_day12", DAY12_PATH))
+
+
+def test_sample_part1_count_fit_regions() -> None:
     lines = read_input_lines(2025, 12, variant="sample")
     parsed = day12.parse_input(lines)
     assert day12.part1(parsed) == 2
 
 
-def test_sample_third_region_is_impossible_exact():
+def test_sample_third_region_is_impossible_exact() -> None:
     lines = read_input_lines(2025, 12, variant="sample")
     parsed = day12.parse_input(lines)
 
@@ -38,7 +42,7 @@ def test_sample_third_region_is_impossible_exact():
     assert day12.can_fit_region(parsed.shapes, parsed.regions[2]) is False
 
 
-def test_area_pruning_rejects_obvious_overflow():
+def test_area_pruning_rejects_obvious_overflow() -> None:
     # Single 3x3 full shape in a 2x2 region cannot fit.
     parsed = day12.parse_input(
         [

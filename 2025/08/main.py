@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from utils.io import read_input_lines
 
@@ -25,7 +25,7 @@ class CircuitResult:
 
 
 class DisjointSet:
-    def __init__(self, n: int):
+    def __init__(self, n: int) -> None:
         self.parent = list(range(n))
         self.size = [1] * n
 

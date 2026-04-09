@@ -1,40 +1,42 @@
-import sys
-from importlib import util
-from pathlib import Path
+from __future__ import annotations
 
+from typing import Protocol, cast
+
+from tests._helpers import PROJECT_ROOT, load_module
 from utils.io import read_input_lines
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DAY03_PATH = PROJECT_ROOT / "2025" / "03" / "main.py"
 
 
-def load_day03_module():
-    spec = util.spec_from_file_location("aoc2025_day03", DAY03_PATH)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {DAY03_PATH}")
-    module = util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+class Day03Module(Protocol):
+    def parse_input(self, lines: list[str]) -> object: ...
+
+    def part1(self, banks: object) -> int: ...
+
+    def part2(self, banks: object) -> int: ...
+
+    def max_bank_joltage(self, bank: str) -> int: ...
+
+    def _max_joltage_k_digits(self, digits: str, k: int) -> int: ...
 
 
-day03 = load_day03_module()
+day03 = cast(Day03Module, load_module("aoc2025_day03", DAY03_PATH))
 
 
-def test_sample_total_joltage():
+def test_sample_total_joltage() -> None:
     lines = read_input_lines(2025, 3, variant="sample")
     banks = day03.parse_input(lines)
     assert day03.part1(banks) == 357
     assert day03.part2(banks) == 3121910778619
 
 
-def test_bank_maximum_in_order():
+def test_bank_maximum_in_order() -> None:
     assert day03.max_bank_joltage("12345") == 45
     assert day03.max_bank_joltage("818181911112111") == 92
     assert day03.max_bank_joltage("21") == 21
 
 
-def test_max_k_digits_helper_general():
+def test_max_k_digits_helper_general() -> None:
     helper = day03._max_joltage_k_digits
     # pick 12 digits from descending then ones
     assert helper("987654321111111", 12) == 987654321111

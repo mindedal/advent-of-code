@@ -1,22 +1,24 @@
-import sys
-from importlib import util
-from pathlib import Path
+from __future__ import annotations
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from typing import Protocol, cast
+
+from tests._helpers import PROJECT_ROOT, load_module
+
 DAY08_PATH = PROJECT_ROOT / "2025" / "08" / "main.py"
 
 
-def load_day08_module():
-    spec = util.spec_from_file_location("aoc2025_day08", DAY08_PATH)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {DAY08_PATH}")
-    module = util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+Point3D = tuple[int, int, int]
 
 
-day08 = load_day08_module()
+class Day08Module(Protocol):
+    def parse_input(self, lines: list[str]) -> list[Point3D]: ...
+
+    def part1(self, points: list[Point3D], pairs_to_connect: int = 1000) -> int: ...
+
+    def part2(self, points: list[Point3D]) -> int: ...
+
+
+day08 = cast(Day08Module, load_module("aoc2025_day08", DAY08_PATH))
 
 
 EXAMPLE_INPUT = [
@@ -43,14 +45,14 @@ EXAMPLE_INPUT = [
 ]
 
 
-def test_example_matches_described_product():
+def test_example_matches_described_product() -> None:
     points = day08.parse_input(EXAMPLE_INPUT)
     assert len(points) == 20
     assert day08.part1(points, pairs_to_connect=10) == 40
     assert day08.part2(points) == 25_272
 
 
-def test_last_connection_product_simple_triangle():
+def test_last_connection_product_simple_triangle() -> None:
     points = [
         (0, 0, 0),
         (10, 0, 0),

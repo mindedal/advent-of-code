@@ -1,22 +1,24 @@
-import sys
-from importlib import util
-from pathlib import Path
+from __future__ import annotations
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from typing import Protocol, cast
+
+from tests._helpers import PROJECT_ROOT, load_module
+
 DAY09_PATH = PROJECT_ROOT / "2025" / "09" / "main.py"
 
 
-def load_day09_module():
-    spec = util.spec_from_file_location("aoc2025_day09", DAY09_PATH)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {DAY09_PATH}")
-    module = util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+Point2D = tuple[int, int]
 
 
-day09 = load_day09_module()
+class Day09Module(Protocol):
+    def parse_input(self, lines: list[str]) -> list[Point2D]: ...
+
+    def part1(self, points: list[Point2D]) -> int: ...
+
+    def part2(self, points: list[Point2D]) -> int: ...
+
+
+day09 = cast(Day09Module, load_module("aoc2025_day09", DAY09_PATH))
 
 
 SAMPLE_INPUT = [
@@ -31,17 +33,17 @@ SAMPLE_INPUT = [
 ]
 
 
-def test_sample_max_area_two_corners():
+def test_sample_max_area_two_corners() -> None:
     points = day09.parse_input(SAMPLE_INPUT)
     assert day09.part1(points) == 50
 
 
-def test_sample_green_limited_area():
+def test_sample_green_limited_area() -> None:
     points = day09.parse_input(SAMPLE_INPUT)
     assert day09.part2(points) == 24
 
 
-def test_concave_shape_blocks_outside_rectangles():
+def test_concave_shape_blocks_outside_rectangles() -> None:
     concave = [
         (0, 0),
         (4, 0),

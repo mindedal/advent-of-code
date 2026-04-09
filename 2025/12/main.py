@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from functools import lru_cache
-from typing import Iterable
+from functools import cache
 
 from utils.io import read_input_lines
 
@@ -39,7 +39,7 @@ def parse_input(lines: Iterable[str]) -> ParsedInput:
     shapes: dict[int, list[str]] = {}
     regions: list[tuple[int, int, list[int]]] = []
 
-    it = iter([ln.rstrip("\n") for ln in lines])
+    it = iter(ln.rstrip("\n") for ln in lines)
     pending: str | None = None
 
     def next_line() -> str | None:
@@ -200,7 +200,7 @@ def _can_fit_exact(
 
     placements: list[list[int]] = []
     areas: list[int] = []
-    for i, oris in enumerate(shape_oris):
+    for oris in shape_oris:
         areas.append(len(oris[0].cells) if oris else 0)
         placements.append(_placements_for_shape(oris, region_w, region_h))
 
@@ -213,7 +213,7 @@ def _can_fit_exact(
 
     counts_t = tuple(counts)
 
-    @lru_cache(maxsize=None)
+    @cache
     def dfs(occ: int, remaining: tuple[int, ...]) -> bool:
         if all(c == 0 for c in remaining):
             return True

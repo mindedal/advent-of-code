@@ -1,12 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, Iterable, List
-
-try:
-    import z3  # type: ignore[import-not-found]
-except ImportError as exc:  # pragma: no cover - dependency should be installed
-    raise ImportError("z3-solver is required for Day 11. Install with `uv add z3-solver`.") from exc
+from collections.abc import Iterable
 
 from utils.io import read_input_lines
 
@@ -17,7 +12,7 @@ START_PART2 = "svr"
 END = "out"
 REQUIRED_PART2 = ("dac", "fft")
 
-Graph = Dict[str, List[str]]
+Graph = dict[str, list[str]]
 
 
 def parse_input(lines: Iterable[str]) -> Graph:
@@ -101,32 +96,6 @@ def _count_paths_dfs(graph: Graph, start: str, end: str, reachable: set[str]) ->
     return dfs(start)
 
 
-def _count_paths_z3(graph: Graph, start: str, end: str, reachable: set[str]) -> int:
-    solver = z3.Solver()
-
-    vars_: dict[str, z3.ArithRef] = {node: z3.Int(f"paths_{node}") for node in reachable}
-    for var in vars_.values():
-        solver.add(var >= 0)
-
-    solver.add(vars_[end] == 1)
-    for node in reachable:
-        if node == end:
-            continue
-        outs = [vars_[nxt] for nxt in graph.get(node, []) if nxt in reachable]
-        if outs:
-            solver.add(vars_[node] == z3.Sum(outs))
-        else:
-            solver.add(vars_[node] == 0)
-
-    if solver.check() != z3.sat:
-        raise ValueError("Path counting constraints are unsatisfiable (likely due to cycles)")
-
-    model = solver.model()
-    return int(
-        model.eval(vars_[start], model_completion=True).as_long()  # type: ignore[attr-defined]
-    )
-
-
 def _topo_order(graph: Graph, start: str, reachable: set[str]) -> list[str]:
     order: list[str] = []
     seen: set[str] = set()
@@ -180,65 +149,6 @@ def _count_paths_with_required_dag(
     return sum(count for mask, count in enumerate(end_state) if mask & all_mask == all_mask)
 
 
-def _count_paths_with_required_z3(
-    graph: Graph, start: str, end: str, reachable: set[str], required: tuple[str, ...]
-) -> int:
-    if not required:
-        return _count_paths_z3(graph, start, end, reachable)
-    if end not in reachable or any(r not in reachable for r in required):
-        return 0
-
-    k = len(required)
-    all_mask = (1 << k) - 1
-    req_bits = {name: 1 << i for i, name in enumerate(required)}
-    preds: dict[str, list[str]] = defaultdict(list)
-    for src, outs in graph.items():
-        for dst in outs:
-            if dst in reachable and src in reachable:
-                preds[dst].append(src)
-
-    def bit_for(node: str) -> int:
-        return req_bits.get(node, 0)
-
-    solver = z3.Solver()
-    vars_: dict[tuple[str, int], z3.ArithRef] = {}
-    for node in reachable:
-        for mask in range(1 << k):
-            v = z3.Int(f"paths_{node}_{mask}")
-            vars_[(node, mask)] = v
-            solver.add(v >= 0)
-
-    start_bit = bit_for(start)
-    for mask in range(1 << k):
-        val = 1 if mask == start_bit else 0
-        solver.add(vars_[(start, mask)] == val)
-
-    for node in reachable:
-        if node == start:
-            continue
-        node_bit = bit_for(node)
-        node_preds = preds.get(node, [])
-        for mask in range(1 << k):
-            contribs = []
-            for pmask in range(1 << k):
-                if (pmask | node_bit) != mask:
-                    continue
-                for pred in node_preds:
-                    contribs.append(vars_[(pred, pmask)])
-            solver.add(vars_[(node, mask)] == (z3.Sum(contribs) if contribs else 0))
-
-    if solver.check() != z3.sat:
-        raise ValueError("Path counting constraints are unsatisfiable (likely due to cycles)")
-
-    model = solver.model()
-    total = 0
-    for mask in range(1 << k):
-        if mask & all_mask == all_mask:
-            val = model.eval(vars_[(end, mask)], model_completion=True).as_long()  # type: ignore[attr-defined]
-            total += int(val)
-    return total
-
-
 def part1(graph: Graph, start: str = START_PART1, end: str = END) -> int:
     """Count distinct paths from ``start`` to ``end`` in a DAG using DFS+memo."""
 
@@ -255,17 +165,17 @@ def part2(
     end: str = END,
     required: tuple[str, ...] = REQUIRED_PART2,
 ) -> int:
-    """Count paths that must visit all required nodes (any order) using z3.
+    """Count paths that must visit all required nodes in a DAG.
 
-    Uses a stateful linear system where paths are tracked by which required
-    nodes have been visited so far.
+    Tracks reachable states with a bitmask DP over a topological ordering,
+    which avoids the much higher overhead of a general-purpose solver.
     """
 
     reachable = _collect_reachable(graph, start)
     if end not in reachable:
         return 0
     _check_for_cycles(graph, start, reachable)
-    return _count_paths_with_required_z3(graph, start, end, reachable, required)
+    return _count_paths_with_required_dag(graph, start, end, reachable, required)
 
 
 def run(variant: str | None = None) -> None:

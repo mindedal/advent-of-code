@@ -1,34 +1,32 @@
-import sys
-from importlib import util
-from pathlib import Path
+from __future__ import annotations
 
+from typing import Protocol, cast
+
+from tests._helpers import PROJECT_ROOT, load_module
 from utils.io import read_input_lines
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DAY04_PATH = PROJECT_ROOT / "2025" / "04" / "main.py"
 
 
-def load_day04_module():
-    spec = util.spec_from_file_location("aoc2025_day04", DAY04_PATH)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {DAY04_PATH}")
-    module = util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+class Day04Module(Protocol):
+    def parse_input(self, lines: list[str]) -> object: ...
+
+    def part1(self, grid: object) -> int: ...
+
+    def part2(self, grid: object) -> int: ...
 
 
-day04 = load_day04_module()
+day04 = cast(Day04Module, load_module("aoc2025_day04", DAY04_PATH))
 
 
-def test_sample_accessible_rolls():
+def test_sample_accessible_rolls() -> None:
     lines = read_input_lines(2025, 4, variant="sample")
     grid = day04.parse_input(lines)
     assert day04.part1(grid) == 13
     assert day04.part2(grid) == 43
 
 
-def test_edge_cells_count_neighbours_correctly():
+def test_edge_cells_count_neighbours_correctly() -> None:
     # Grid where only center has 8 neighbours; others have fewer
     grid = day04.parse_input(
         [
@@ -42,7 +40,7 @@ def test_edge_cells_count_neighbours_correctly():
     assert day04.part1(grid) == 4
 
 
-def test_iterative_removal_clears_full_block():
+def test_iterative_removal_clears_full_block() -> None:
     grid = day04.parse_input(
         [
             "@@@",

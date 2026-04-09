@@ -1,46 +1,31 @@
-import sys
-from importlib import util
-from pathlib import Path
+from __future__ import annotations
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from typing import Protocol, cast
+
+from tests._helpers import PROJECT_ROOT, load_module
+
 DAY06_PATH = PROJECT_ROOT / "2025" / "06" / "main.py"
 
 
-def load_day06_module():
-    spec = util.spec_from_file_location("aoc2025_day06", DAY06_PATH)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load module from {DAY06_PATH}")
-    module = util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+class ProblemLike(Protocol):
+    numbers: list[int]
+    op: str
 
 
-day06 = load_day06_module()
+class Day06Module(Protocol):
+    def parse_input(self, lines: list[str]) -> list[ProblemLike]: ...
+
+    def parse_input_columns(self, lines: list[str]) -> list[ProblemLike]: ...
+
+    def part1(self, problems: list[ProblemLike]) -> int: ...
+
+    def part2(self, lines: list[str]) -> int: ...
 
 
-def _build_worksheet(problems):
-    """Construct worksheet rows from structured data for testing."""
-
-    operand_count = len(problems[0][0])
-    if any(len(ops) != operand_count for ops, _ in problems):
-        raise ValueError("All problems must have the same number of operands")
-
-    rows = ["" for _ in range(operand_count + 1)]
-    for idx, (operands, op) in enumerate(problems):
-        width = max(len(str(n)) for n in operands)
-        for r, value in enumerate(operands):
-            rows[r] += str(value).rjust(width)
-        rows[-1] += op.rjust(width)
-
-        if idx != len(problems) - 1:
-            for r in range(len(rows)):
-                rows[r] += " "
-
-    return rows
+day06 = cast(Day06Module, load_module("aoc2025_day06", DAY06_PATH))
 
 
-def test_sample_grand_total_matches_description():
+def test_sample_grand_total_matches_description() -> None:
     worksheet = [
         "123 328  51 64 ",
         " 45 64  387 23 ",
@@ -54,7 +39,7 @@ def test_sample_grand_total_matches_description():
     assert day06.part2(worksheet) == 3_263_827
 
 
-def test_parser_handles_extra_spacing_between_problems():
+def test_parser_handles_extra_spacing_between_problems() -> None:
     lines = [
         " 7    81  ",
         "33    2   ",
@@ -67,7 +52,7 @@ def test_parser_handles_extra_spacing_between_problems():
     assert day06.part1(problems) == (7 * 33 * 5) + (81 + 2 + 19)
 
 
-def test_column_parsing_reads_right_to_left():
+def test_column_parsing_reads_right_to_left() -> None:
     lines = [
         "12 78",
         "34 56",

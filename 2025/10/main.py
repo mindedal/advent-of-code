@@ -1,19 +1,29 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
-
-try:  # z3 is required for part 2
-    import z3  # type: ignore[import-not-found]
-except ImportError:  # pragma: no cover - make requirement explicit
-    raise ImportError("z3-solver is required for Day 10 part 2. Install with `uv add z3-solver`.")
 
 from utils.io import read_input_lines
+from utils.z3_helpers import (
+    SAT,
+    ArithExpr,
+    add_constraints,
+    check_solver,
+    eval_int,
+    int_var,
+    make_optimizer,
+    minimize_expr,
+    sum_expr,
+)
 
 YEAR = 2025
 DAY = 10
 INF = 10**18
+
+_DIAGRAM_RE = re.compile(r"\[([^\]]+)\]")
+_BUTTON_RE = re.compile(r"\(([^)]*)\)")
+_TARGET_RE = re.compile(r"\{([^}]*)\}")
 
 
 @dataclass(frozen=True)
@@ -37,6 +47,7 @@ def _diagram_to_mask(diagram: str) -> int:
 def _button_to_mask_and_indices(indices: str) -> tuple[int, list[int]]:
     mask = 0
     idxs: list[int] = []
+    seen: set[int] = set()
     for part in indices.split(","):
         part = part.strip()
         if not part:
@@ -44,13 +55,16 @@ def _button_to_mask_and_indices(indices: str) -> tuple[int, list[int]]:
         idx = int(part)
         if idx < 0:
             raise ValueError("Indicator index cannot be negative")
+        if idx in seen:
+            raise ValueError("Indicator indices within a single button must be unique")
+        seen.add(idx)
         mask ^= 1 << idx
         idxs.append(idx)
     return mask, idxs
 
 
 def _parse_targets(line: str) -> list[int]:
-    target_match = re.search(r"\{([^}]*)\}", line)
+    target_match = _TARGET_RE.search(line)
     if not target_match:
         return []
     return [int(x.strip()) for x in target_match.group(1).split(",") if x.strip()]
@@ -69,13 +83,13 @@ def parse_input(lines: Iterable[str]) -> list[Machine]:
         if not line:
             continue
 
-        diagram_match = re.search(r"\[([^\]]+)\]", line)
+        diagram_match = _DIAGRAM_RE.search(line)
         if not diagram_match:
             raise ValueError(f"Missing indicator diagram in line: {line}")
         diagram = diagram_match.group(1)
         target_mask = _diagram_to_mask(diagram)
 
-        button_strs = re.findall(r"\(([^)]*)\)", line)
+        button_strs = _BUTTON_RE.findall(line)
         if not button_strs:
             raise ValueError(f"No buttons found in line: {line}")
 
@@ -106,7 +120,7 @@ def _min_presses(target_mask: int, buttons: list[int]) -> int:
         raise ValueError("No buttons available to toggle lights")
 
     states = [0] * (1 << n)
-    best = float("inf")
+    best: int | None = None
 
     for mask in range(1, 1 << n):
         lsb = mask & -mask
@@ -116,12 +130,12 @@ def _min_presses(target_mask: int, buttons: list[int]) -> int:
     for mask, state in enumerate(states):
         if state == target_mask:
             presses = mask.bit_count()
-            if presses < best:
+            if best is None or presses < best:
                 best = presses
 
-    if best == float("inf"):
+    if best is None:
         raise ValueError("Target configuration is unreachable with given buttons")
-    return int(best)
+    return best
 
 
 def _compress_vectors(vectors: list[list[int]]) -> list[tuple[int, ...]]:
@@ -142,7 +156,7 @@ def _min_presses_counters(targets: list[int], buttons: list[list[int]]) -> int:
 
     m = len(targets)
 
-    vectors = []
+    vectors: list[list[int]] = []
     for idxs in buttons:
         vec = [0] * m
         for idx in idxs:
@@ -155,25 +169,26 @@ def _min_presses_counters(targets: list[int], buttons: list[list[int]]) -> int:
     if not vectors:
         raise ValueError("No buttons affect any counters")
 
-    solver = z3.Optimize()
-    vars_ = [z3.Int(f"x{j}") for j in range(len(vectors))]
+    compressed_vectors = _compress_vectors(vectors)
+
+    solver = make_optimizer()
+    vars_: list[ArithExpr] = [int_var(f"x{j}") for j in range(len(compressed_vectors))]
     for v in vars_:
-        solver.add(v >= 0)
+        add_constraints(solver, v >= 0)
 
     for i in range(m):
-        contrib = [vars_[j] for j, vec in enumerate(vectors) if vec[i]]
+        contrib: list[ArithExpr] = [vars_[j] for j, vec in enumerate(compressed_vectors) if vec[i]]
         if not contrib and targets[i] != 0:
             return INF
-        solver.add(z3.Sum(contrib) == targets[i])
+        add_constraints(solver, sum_expr(contrib) == targets[i])
 
-    solver.minimize(z3.Sum(vars_))
-    if solver.check() != z3.sat:
+    minimize_expr(solver, sum_expr(vars_))
+    if check_solver(solver) != SAT:
         return INF
     model = solver.model()
     total = 0
     for v in vars_:
-        val = model.eval(v, model_completion=True)
-        total += int(val.as_long())  # type: ignore[attr-defined]
+        total += eval_int(model, v)
     return total
 
 
