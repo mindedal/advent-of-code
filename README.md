@@ -22,7 +22,7 @@ uv sync                        # install dependencies (project + dev)
 uv run pytest                  # run tests
 uv run ruff check .            # lint the repo
 uv run ruff format .           # format the repo
-uv run pyright                 # strict type checking
+uv run ty check                # strict type checking
 uv run python 2025/01/main.py  # run a day from the repo root
 ```
 
@@ -34,13 +34,13 @@ uv run python 2025/01/main.py  # run a day from the repo root
 
 ## Quality checks
 
-This repo is managed with `uv`, formatted and linted with `ruff`, and type-checked with `pyright` in strict mode. A good local loop is:
+This repo is managed with `uv`, formatted and linted with `ruff`, and type-checked with `ty` with all rules enabled. A good local loop is:
 
 ```bash
 uv sync
 uv run ruff check .
 uv run ruff format .
-uv run pyright
+uv run ty check
 uv run pytest
 ```
 

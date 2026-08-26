@@ -29,7 +29,7 @@ def make_optimizer() -> z3.Optimize:
 def int_var(name: str) -> z3.ArithRef:
     """Create a typed integer variable."""
 
-    return z3.Int(name)  # pyright: ignore[reportUnknownMemberType]
+    return cast(z3.ArithRef, z3.Int(name))
 
 
 def add_constraints(solver: SolverLike, *constraints: object) -> None:
@@ -41,7 +41,7 @@ def add_constraints(solver: SolverLike, *constraints: object) -> None:
 def sum_expr(terms: Sequence[z3.ArithRef]) -> z3.ArithRef | int:
     """Build a typed sum expression from z3 arithmetic terms."""
 
-    return cast(z3.ArithRef | int, z3.Sum(terms))  # pyright: ignore[reportUnknownMemberType]
+    return cast(z3.ArithRef | int, z3.Sum(terms))
 
 
 def minimize_expr(solver: z3.Optimize, expr: z3.ArithRef | int) -> None:

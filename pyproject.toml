@@ -18,7 +18,7 @@ packages = ["utils"]
 package = true
 
 [dependency-groups]
-dev = ["pytest>=9.0.3", "pyright>=1.1.402", "ruff>=0.6.0"]
+dev = ["pytest>=9.0.3", "ruff>=0.6.0", "ty"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -39,13 +39,5 @@ ignore = ["ANN401"]
 quote-style = "double"
 indent-style = "space"
 
-[tool.pyright]
-include = ["2025", "tests", "utils"]
-venvPath = "."
-venv = ".venv"
-pythonVersion = "3.11"
-typeCheckingMode = "strict"
-reportMissingImports = "error"
-reportMissingTypeStubs = "none"
-reportPrivateUsage = "none"
-reportUnusedFunction = "none"
+[tool.ty.rules]
+all = "error"

@@ -26,14 +26,13 @@ class CircuitResult:
 
 class DisjointSet:
     def __init__(self, n: int) -> None:
-        self.parent = list(range(n))
-        self.size = [1] * n
+        self.parent: list[int] = list(range(n))
+        self.size: list[int] = [1] * n
 
     def find(self, x: int) -> int:
-        while self.parent[x] != x:
-            self.parent[x] = self.parent[self.parent[x]]
-            x = self.parent[x]
-        return x
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
 
     def union(self, a: int, b: int) -> None:
         ra, rb = self.find(a), self.find(b)
